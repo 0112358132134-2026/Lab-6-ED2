@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RSA_Structures;
 using System.IO.Compression;
+using System.Numerics;
 
 namespace API_RSA.Controllers
 {
@@ -98,9 +99,9 @@ namespace API_RSA.Controllers
                 }
                 string auxKeys = Encoding.Default.GetString(keyBytes);
                 string[] splits = auxKeys.Split(",");
-
+                
                 int isEncrypted = -1;
-                byte[] result = rsa.RSA_(originalBytes, Convert.ToInt32(splits[0]), Convert.ToInt32(splits[1]), ref isEncrypted, extension);
+                byte[] result = rsa.RSA_(originalBytes, BigInteger.Parse(splits[0]), BigInteger.Parse(splits[1]), ref isEncrypted, extension);
 
                 if (isEncrypted == 1)
                 {

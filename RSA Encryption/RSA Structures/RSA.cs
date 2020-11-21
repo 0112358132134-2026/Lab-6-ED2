@@ -4,17 +4,17 @@ using System.Text;
 
 namespace RSA_Structures
 {
-    public class RSA
+    public class RSA : IRSA
     {
         #region "Keys"
-        public string GetKeys(int p, int q)
+        public string GetKeys(BigInteger p, BigInteger q)
         {
             if (IsPrimeNumber(p) && IsPrimeNumber(q))
             {
-                int n = p * q;
-                int phi = (p - 1) * (q - 1);
-                int e = FindE(phi);
-                int d = FindD(phi, e);
+                BigInteger n = p * q;
+                BigInteger phi = (p - 1) * (q - 1);
+                BigInteger e = FindE(phi);
+                BigInteger d = FindD(phi, e);
                 return n + "," + e + "|" + n + "," + d;
             }
             else
@@ -22,7 +22,7 @@ namespace RSA_Structures
                 return "";
             }
         }
-        public bool IsPrimeNumber(int number)
+        public bool IsPrimeNumber(BigInteger number)
         {
             int counter = 0;
             for (int j = 1; j < 10; j++)
@@ -37,9 +37,9 @@ namespace RSA_Structures
             }
             if (counter == 1) return true; else return false;                        
         }
-        public int FindE(int phi)
+        public BigInteger FindE(BigInteger phi)
         {
-            int e = 0;
+            BigInteger e = 0;
             for (int i = 2; i < phi; i++)
             {
                 if (IsPrimeNumber(i))
@@ -53,24 +53,24 @@ namespace RSA_Structures
             }
             return e;
         }
-        public int FindD(int phi, int e)
+        public BigInteger FindD(BigInteger phi, BigInteger e)
         {
-            int phiAux1 = phi, phiAux2 = phi;
-            int eAux = e;
-            int one = 1;
+            BigInteger phiAux1 = phi, phiAux2 = phi;
+            BigInteger eAux = e;
+            BigInteger one = 1;
 
-            int d = 0;
+            BigInteger d = 0;
             bool match = false;
 
             while (!match)
             {
-                int division = phiAux1 / eAux;
-                
-                int multiplication1 = division * eAux;
-                int multiplication2 = division * one;
+                BigInteger division = phiAux1 / eAux;
 
-                int subtraction1 = phiAux1 - multiplication1;
-                int subtraction2 = phiAux2 - multiplication2;
+                BigInteger multiplication1 = division * eAux;
+                BigInteger multiplication2 = division * one;
+
+                BigInteger subtraction1 = phiAux1 - multiplication1;
+                BigInteger subtraction2 = phiAux2 - multiplication2;
 
                 if (subtraction1 == 1)
                 {
@@ -105,7 +105,7 @@ namespace RSA_Structures
         }
         #endregion
         #region "RSA"
-        public byte[] RSA_(byte[] originalBytes, int n, int ed, ref int isEncrypted, string extension)
+        public byte[] RSA_(byte[] originalBytes, BigInteger n, BigInteger ed, ref int isEncrypted, string extension)
         {
             byte[] result;
 
@@ -114,12 +114,12 @@ namespace RSA_Structures
                 List<BigInteger> decimals = new List<BigInteger>();
                 for (int i = 0; i < originalBytes.Length; i++)
                 {
-                    decimals.Add((BigInteger)originalBytes[i]);
+                    decimals.Add(originalBytes[i]);
                 }
 
                 List<string> bytes = BinariesWithMaximunLength(decimals, 8);
-                int length = ConvertDecimalToBinary(n).Length;
-                List<int> originalBytesAux = OriginalBytes(bytes, length);
+                int length = ToNBase(n, 2).Length;
+                List<BigInteger> originalBytesAux = OriginalBytes(bytes, length);
    
                 result = new byte[originalBytesAux.Count];
                 for (int i = 0; i < originalBytesAux.Count; i++)
@@ -137,13 +137,13 @@ namespace RSA_Structures
                     resultingBytes.Add(power);
                 }
 
-                int length = ConvertDecimalToBinary(n).Length;
+                BigInteger length = ToNBase(n, 2).Length;
                 List<string> finalBytes = BinariesWithMaximunLength(resultingBytes, length);               
-                List<int> decimals = new List<int>();
+                List<BigInteger> decimals = new List<BigInteger>();
 
                 for (int i = 0; i < finalBytes.Count; i++)
                 {
-                    decimals.Add(ConvertBinaryToDecimal(finalBytes[i]));
+                    decimals.Add(BinToDec(finalBytes[i]));
                 }
 
                 result = new byte[decimals.Count];
@@ -156,8 +156,9 @@ namespace RSA_Structures
             }                        
             return result;
         }
-        #endregion
+        #endregion       
         #region "Auxiliaries"  
+
         public int ConvertBinaryToDecimal(string binary)
         {
             StringBuilder auxiliar = new StringBuilder();
@@ -176,6 +177,19 @@ namespace RSA_Structures
             }
             return decimalNumber;
         }
+        //NUEVO
+        public BigInteger BinToDec(string value)
+        {
+            BigInteger res = 0;
+            foreach (char c in value)
+            {
+                res <<= 1;
+                res += c == '1' ? 1 : 0;
+            }
+            return res; 
+        }
+        //NUEVO
+
         public string ConvertDecimalToBinary(BigInteger number)
         {
             string result = "";
@@ -205,6 +219,7 @@ namespace RSA_Structures
             return sb.ToString();
         }
         //NUEVO
+
         public List<string> SeparateBytes(string largeBinary, int length)
         {
             StringBuilder copy = new StringBuilder();
@@ -250,7 +265,7 @@ namespace RSA_Structures
             }
             return binary.ToString();
         }
-        public List<string> BinariesWithMaximunLength(List<BigInteger> listOfBinaries, int length)
+        public List<string> BinariesWithMaximunLength(List<BigInteger> listOfBinaries, BigInteger length)
         {
             StringBuilder auxBinary = new StringBuilder();
             for (int i = 0; i < listOfBinaries.Count; i++)
@@ -260,7 +275,7 @@ namespace RSA_Structures
                                  
                 if (decimalToBinary.Length < length)
                 {
-                    int missing = length - decimalToBinary.Length;
+                    BigInteger missing = length - decimalToBinary.Length;
                     for (int j = 0; j < missing; j++)
                     {
                         decimalToBinary.Insert(0, "0");
@@ -274,7 +289,7 @@ namespace RSA_Structures
 
             return result;
         }
-        public List<int> OriginalBytes(List<string> bytes, int length)
+        public List<BigInteger> OriginalBytes(List<string> bytes, int length)
         {
             StringBuilder auxiliar = new StringBuilder();
             for (int i = 0; i < bytes.Count; i++)
@@ -296,10 +311,10 @@ namespace RSA_Structures
             }
 
             List<string> originalBinaries = SeparateBytes(auxiliar.ToString(), length);
-            List<int> result = new List<int>();
+            List<BigInteger> result = new List<BigInteger>();
             for (int i = 0; i < originalBinaries.Count; i++)
             {
-                result.Add(ConvertBinaryToDecimal(originalBinaries[i]));
+                result.Add(BinToDec(originalBinaries[i]));
             }            
             return result;
         }
